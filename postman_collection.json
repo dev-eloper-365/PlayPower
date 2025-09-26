@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "AI Quizzer Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+        "body": { "mode": "raw", "raw": "{\n  \"username\": \"student1\",\n  \"password\": \"password\"\n}" }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Quiz",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/quiz/generate", "host": ["{{baseUrl}}"], "path": ["api","quiz","generate"] },
+        "body": { "mode": "raw", "raw": "{\n  \"grade\": 6,\n  \"Subject\": \"Mathematics\",\n  \"TotalQuestions\": 5,\n  \"MaxScore\": 10,\n  \"Difficulty\": \"MEDIUM\"\n}" }
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Quiz",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/quiz/submit", "host": ["{{baseUrl}}"], "path": ["api","quiz","submit"] },
+        "body": { "mode": "raw", "raw": "{\n  \"quizId\": \"{{quizId}}\",\n  \"responses\": [\n    { \"questionId\": \"{{questionId}}\", \"userResponse\": \"A\" }\n  ]\n}" }
+      },
+      "response": []
+    },
+    {
+      "name": "History",
+      "request": {
+        "method": "GET",
+        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/quiz/history?grade=6&subject=Mathematics&from=01/09/2024&to=09/09/2024&page=1&pageSize=10", "host": ["{{baseUrl}}"], "path": ["api","quiz","history"], "query": [
+          {"key":"grade","value":"6"},
+          {"key":"subject","value":"Mathematics"},
+          {"key":"from","value":"01/09/2024"},
+          {"key":"to","value":"09/09/2024"},
+          {"key":"page","value":"1"},
+          {"key":"pageSize","value":"10"}
+        ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Retry",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/quiz/{{quizId}}/retry", "host": ["{{baseUrl}}"], "path": ["api","quiz","{{quizId}}","retry"] },
+        "body": { "mode": "raw", "raw": "{\n  \"responses\": [\n    { \"questionId\": \"{{questionId}}\", \"userResponse\": \"A\" }\n  ]\n}" }
+      },
+      "response": []
+    },
+    {
+      "name": "Hint",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" } ],
+        "url": { "raw": "{{baseUrl}}/api/quiz/{{quizId}}/hint", "host": ["{{baseUrl}}"], "path": ["api","quiz","{{quizId}}","hint"] },
+        "body": { "mode": "raw", "raw": "{\n  \"questionId\": \"{{questionId}}\"\n}" }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "quizId", "value": "" },
+    { "key": "questionId", "value": "" }
+  ]
+}

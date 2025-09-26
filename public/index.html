@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Quizzer Backend - Testing Interface</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
+</head>
+<body>
+  <header>
+    <h1>AI Quizzer Backend</h1>
+    <p>Interactive tester for authentication, quiz generation, submission, history, retry, and AI hints.</p>
+  </header>
+
+  <main>
+    <section id="auth">
+      <h2>Authentication</h2>
+      <form id="loginForm">
+        <input id="username" placeholder="Username" value="student1" required>
+        <input id="password" type="password" placeholder="Password" value="password" required>
+        <button type="submit">Login</button>
+      </form>
+      <div class="info">
+        <label>JWT Token</label>
+        <textarea id="token" readonly></textarea>
+      </div>
+    </section>
+
+    <section id="generate">
+      <h2>Generate Quiz</h2>
+      <form id="genForm">
+        <label>grade <input id="grade" type="number" min="1" max="12" value="6" required></label>
+        <label>Stream (for grades 11-12)
+          <select id="Stream">
+            <option value="">Select Stream</option>
+            <option value="Science Stream">Science Stream</option>
+            <option value="Commerce Stream">Commerce Stream</option>
+            <option value="Arts / Humanities Stream">Arts / Humanities Stream</option>
+          </select>
+        </label>
+        <label>Subject
+          <select id="Subject" required>
+            <option value="">Select Subject</option>
+          </select>
+        </label>
+        <label>TotalQuestions <input id="TotalQuestions" type="number" min="1" max="50" value="5" required></label>
+        <label>MaxScore <input id="MaxScore" type="number" min="1" max="100" value="10" required></label>
+        <label>Difficulty
+          <select id="Difficulty">
+            <option>EASY</option>
+            <option selected>MEDIUM</option>
+            <option>HARD</option>
+          </select>
+        </label>
+        <button type="submit">Generate</button>
+      </form>
+      <pre id="genResult" class="panel"></pre>
+    </section>
+
+    <section id="submit">
+      <h2>Submit Quiz</h2>
+      <form id="submitForm">
+        <label>Quiz ID <input id="quizId" required></label>
+        <div id="answers"></div>
+        <button type="submit">Submit</button>
+      </form>
+      <pre id="submitResult" class="panel"></pre>
+    </section>
+
+    <section id="history">
+      <h2>Quiz History</h2>
+      <form id="historyForm">
+        <label>Grade
+          <select id="hGrade">
+            <option value="">(any)</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+            <option>11</option><option>12</option>
+          </select>
+        </label>
+        <label>Stream (11-12)
+          <select id="hStream">
+            <option value="">(any)</option>
+            <option value="Science Stream">Science Stream</option>
+            <option value="Commerce Stream">Commerce Stream</option>
+            <option value="Arts / Humanities Stream">Arts / Humanities Stream</option>
+          </select>
+        </label>
+        <label>Subject
+          <select id="hSubject">
+            <option value="">(any subject)</option>
+          </select>
+        </label>
+        <label>Min %
+          <select id="minMarks">
+            <option value="">(any)</option>
+            <option>0</option><option>10</option><option>20</option><option>30</option><option>40</option>
+            <option>50</option><option>60</option><option>70</option><option>80</option><option>90</option>
+          </select>
+        </label>
+        <label>Max %
+          <select id="maxMarks">
+            <option value="">(any)</option>
+            <option>100</option><option>90</option><option>80</option><option>70</option><option>60</option>
+            <option>50</option><option>40</option><option>30</option><option>20</option><option>10</option>
+          </select>
+        </label>
+        <label>From <input id="from" type="date"></label>
+        <label>To <input id="to" type="date"></label>
+        <label>Page
+          <select id="page">
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          </select>
+        </label>
+        <label>Page Size
+          <select id="pageSize">
+            <option>5</option><option selected>10</option><option>20</option><option>50</option><option>100</option>
+          </select>
+        </label>
+        <button type="submit">Fetch</button>
+      </form>
+      <pre id="historyResult" class="panel"></pre>
+    </section>
+
+    <section id="retry">
+      <h2>Retry Quiz</h2>
+      <form id="retryForm">
+        <input id="retryQuizId" placeholder="Quiz ID" required>
+        <button>Retry with current answers</button>
+      </form>
+      <pre id="retryResult" class="panel"></pre>
+    </section>
+
+    <section id="hint">
+      <h2>AI Hint</h2>
+      <form id="hintForm">
+        <input id="hintQuizId" placeholder="Quiz ID" required>
+        <input id="questionId" placeholder="Question ID" required>
+        <button>Get Hint</button>
+      </form>
+      <pre id="hintResult" class="panel"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <button id="clear">Clear Stored Data</button>
+  </footer>
+
+  <script src="/script.js"></script>
+  <noscript>This page requires JavaScript.</noscript>
+  </body>
+  </html>
+
+
