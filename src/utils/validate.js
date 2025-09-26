@@ -60,6 +60,11 @@ export const schemas = {
   retry: Joi.object({
     responses: Joi.array().items(Joi.object({ questionId: Joi.string().required(), userResponse: Joi.string().valid('A','B','C','D').required() })).min(1).required(),
   }),
+  leaderboard: Joi.object({
+    grade: Joi.number().integer().min(1).max(12).optional(),
+    subject: Joi.string().min(1).max(64).optional(),
+    limit: Joi.number().integer().min(1).max(100).default(10)
+  })
 };
 
 export default { validateBody, validateQuery, schemas };

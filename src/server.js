@@ -13,6 +13,8 @@ import { requireAuth } from './middleware/auth.js';
 import { validateBody, validateQuery, schemas } from './utils/validate.js';
 import * as authController from './controllers/authController.js';
 import * as quizController from './controllers/quizController.js';
+import * as leaderboardController from './controllers/leaderboardController.js';
+import * as configController from './controllers/configController.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +32,9 @@ app.get('/', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
+// Public config
+app.get('/api/config', configController.publicConfig);
+
 // Auth
 app.post('/api/auth/login', validateBody(schemas.login), authController.login);
 
@@ -39,6 +44,10 @@ app.post('/api/quiz/submit', requireAuth, validateBody(schemas.submitQuiz), quiz
 app.get('/api/quiz/history', requireAuth, validateQuery(schemas.history), quizController.history);
 app.post('/api/quiz/:quizId/retry', requireAuth, validateBody(schemas.retry), quizController.retry);
 app.post('/api/quiz/:quizId/hint', requireAuth, validateBody(schemas.hint), quizController.hint);
+app.post('/api/quiz/:quizId/send-result', requireAuth, quizController.sendResultEmail);
+
+// Leaderboard (public)
+app.get('/api/leaderboard', validateQuery(schemas.leaderboard), leaderboardController.list);
 
 // Not found
 app.use((_req, res) => res.status(404).json({ ok: false, error: { message: 'Route not found' } }));

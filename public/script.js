@@ -18,6 +18,8 @@ const api = {
   }
 };
 
+let FEAT = { emailEnabled: false };
+
 // Auth
 $('#loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -133,6 +135,33 @@ $('#submitForm').addEventListener('submit', async (e) => {
   const responses = Array.from(document.querySelectorAll('#answers select')).map((i) => ({ questionId: i.dataset.qid, userResponse: i.value }));
   const res = await api.post('/api/quiz/submit', { quizId, responses });
   $('#submitResult').textContent = JSON.stringify(res, null, 2);
+  // Add send-result input and button after successful submission
+  if (res.ok && res.submissionId) {
+    let btn = document.getElementById('sendResultBtn');
+    let input = document.getElementById('sendResultTo');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'email';
+      input.id = 'sendResultTo';
+      input.placeholder = 'recipient@example.com';
+      input.style.marginLeft = '8px';
+      $('#submitForm').appendChild(input);
+    }
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'sendResultBtn';
+      btn.textContent = 'Send Result Email';
+      btn.style.marginLeft = '8px';
+      $('#submitForm').appendChild(btn);
+      alert('Check Spam');
+      btn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        const to = (document.getElementById('sendResultTo')?.value || '').trim();
+        const out = await api.post(`/api/quiz/${encodeURIComponent(quizId)}/send-result`, { to });
+        alert(out.ok ? (out.skipped ? 'Email skipped (not configured)' : 'Email sent') : (out.error?.message || 'Failed to send'));
+      });
+    }
+  }
 });
 
 // Populate history subjects dropdown based on selected grade/stream
@@ -205,12 +234,44 @@ $('#hintForm').addEventListener('submit', async (e) => {
   $('#hintResult').textContent = JSON.stringify(res, null, 2);
 });
 
+// Leaderboard
+$('#leaderboardForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const params = new URLSearchParams();
+  const grade = $('#lbGrade').value;
+  const subject = $('#lbSubject').value.trim();
+  const limit = $('#lbLimit').value;
+  if (grade) params.append('grade', grade);
+  if (subject) params.append('subject', subject);
+  if (limit) params.append('limit', limit);
+  const res = await api.get('/api/leaderboard?' + params.toString(), false);
+  const tbody = $('#leaderboardRows');
+  tbody.innerHTML = '';
+  if (res.ok && Array.isArray(res.data)) {
+    res.data.forEach((row) => {
+      const tr = document.createElement('tr');
+      const when = new Date(row.created_at).toLocaleString();
+      tr.innerHTML = `<td>${row.username}</td><td>${row.score}</td><td>${row.subject}</td><td>${row.grade}</td><td>${when}</td>`;
+      tbody.appendChild(tr);
+    });
+  } else {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="5">${res.error?.message || 'No data'}</td>`;
+    tbody.appendChild(tr);
+  }
+});
+
 // Init
-(() => {
+(async () => {
   const t = sessionStorage.getItem('token');
   if (t) $('#token').value = t;
   updateSubjectOptions(); // Initialize subject options
   updateHistorySubjectOptions();
+  // Load config for feature flags
+  try {
+    const cfg = await api.get('/api/config', false);
+    if (cfg?.ok) FEAT.emailEnabled = !!cfg.emailEnabled;
+  } catch {}
 })();
 
 // Clear

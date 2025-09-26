@@ -129,7 +129,7 @@
         <input id="retryQuizId" placeholder="Quiz ID" required>
         <button>Retry with current answers</button>
       </form>
-      <pre id="retryResult" class="panel"></pre>
+        <pre id="retryResult" class="panel"></pre>
     </section>
 
     <section id="hint">
@@ -140,6 +140,35 @@
         <button>Get Hint</button>
       </form>
       <pre id="hintResult" class="panel"></pre>
+    </section>
+
+    <section id="leaderboard">
+      <h2>Leaderboard</h2>
+      <form id="leaderboardForm">
+        <label>Grade
+          <select id="lbGrade">
+            <option value="">(any)</option>
+            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+            <option>11</option><option>12</option>
+          </select>
+        </label>
+        <label>Subject <input id="lbSubject" placeholder="(any)"></label>
+        <label>Limit
+          <select id="lbLimit">
+            <option>10</option><option>20</option><option>50</option>
+          </select>
+        </label>
+        <button type="submit">Fetch</button>
+      </form>
+      <div class="panel">
+        <table id="leaderboardTable" style="width:100%">
+          <thead>
+            <tr><th>User</th><th>Score</th><th>Subject</th><th>Grade</th><th>When</th></tr>
+          </thead>
+          <tbody id="leaderboardRows"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 

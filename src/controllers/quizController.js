@@ -1,5 +1,7 @@
 import { generateQuizForUser, submitAnswers, retryQuiz, getHint } from '../services/quizService.js';
 import { filterSubmissionsForUser } from '../models/submissionModel.js';
+import { cacheGet, cacheSet } from '../services/cacheService.js';
+import { sendSubmissionEmail } from '../services/resultEmailService.js';
 
 export const generate = async (req, res, next) => {
   try {
@@ -28,6 +30,10 @@ export const history = async (req, res, next) => {
     const { userId } = req.user;
     // use validated copy from middleware
     let { grade, subject, stream, minMarks, maxMarks, from, to, page = 1, pageSize = 10 } = req.queryValidated || {};
+    // cache key
+    const key = `hist:${userId}:${grade ?? ''}:${subject ?? ''}:${stream ?? ''}:${minMarks ?? ''}:${maxMarks ?? ''}:${from ?? ''}:${to ?? ''}:${page}:${pageSize}`;
+    const cached = await cacheGet(key);
+    if (cached) return res.json(cached);
     // Normalize date inputs: accept Date objects, dd/mm/yyyy, or yyyy-mm-dd
     const normDate = (val) => {
       if (!val) return val;
@@ -55,7 +61,9 @@ export const history = async (req, res, next) => {
     pageSize = Number(pageSize);
     const offset = (page - 1) * pageSize;
     const result = filterSubmissionsForUser({ userId, subject, grade, stream, minMarks, maxMarks, from, to, offset, limit: pageSize });
-    res.json({ ok: true, data: result.rows, total: result.total, page, pageSize });
+    const payload = { ok: true, data: result.rows, total: result.total, page, pageSize };
+    await cacheSet(key, payload);
+    res.json(payload);
   } catch (err) {
     next(err);
   }
@@ -85,6 +93,18 @@ export const hint = async (req, res, next) => {
   }
 };
 
-export default { generate, submit, history, retry, hint };
+export const sendResultEmail = async (req, res, next) => {
+  try {
+    const { quizId } = req.params;
+    const { userId } = req.user;
+    const to = (req.body?.to || '').trim();
+    const out = await sendSubmissionEmail({ userId, quizId, to });
+    res.json({ ok: true, sent: out.ok, skipped: out.skipped, messageId: out.messageId });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export default { generate, submit, history, retry, hint, sendResultEmail };
 
 

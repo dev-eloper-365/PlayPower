@@ -18,6 +18,14 @@ Environment
 - RATE_WINDOW_MS=60000
 - RATE_MAX_REQUESTS=100
 - CORS_ORIGIN=*
+- SMTP_HOST= (optional)
+- SMTP_PORT=587
+- SMTP_SECURE=false
+- SMTP_USER=
+- SMTP_PASS=
+- SMTP_FROM= (defaults to SMTP_USER)
+- REDIS_URL= (optional; falls back to in-memory cache)
+- CACHE_TTL_SECONDS=60
 
 API Endpoints
 - POST /api/auth/login { username, password } -> { token }
@@ -26,6 +34,7 @@ API Endpoints
 - GET /api/quiz/history?filters (auth)
 - POST /api/quiz/:quizId/retry { answers } (auth)
 - POST /api/quiz/:quizId/hint { questionId } (auth)
+- GET /api/leaderboard?grade=&subject=&limit=10 (public)
 
 Testing Interface
 - Visit / to use the HTML tester in `public/` (JWT is stored in sessionStorage).
@@ -56,6 +65,7 @@ Documentation
 
 Known Issues / Limitations
 - AI generation uses a local fallback bank if GROQ_API_KEY is not set.
-- SQLite is single-process. For production scale, swap to Postgres/MySQL and update models.
+- Email notifications require SMTP configuration; otherwise they are skipped silently.
+- Caching uses Redis if available, otherwise in-memory (NodeCache) with TTL.
 
 
