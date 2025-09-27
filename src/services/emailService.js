@@ -30,7 +30,7 @@ function getTransporter() {
   }
 }
 
-export async function sendEmail({ to, subject, text, html }) {
+export async function sendEmail({ to, subject, text, html, headers = {} }) {
   const t = getTransporter();
   if (!t) return { ok: false, skipped: true };
   
@@ -40,7 +40,16 @@ export async function sendEmail({ to, subject, text, html }) {
       to, 
       subject, 
       text, 
-      html 
+      html,
+      headers: {
+        'X-Mailer': 'AI Quizzer Educational Platform',
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'Importance': 'Normal',
+        'X-Auto-Response-Suppress': 'All',
+        'Precedence': 'bulk',
+        ...headers
+      }
     });
     return { ok: true, messageId: info.messageId };
   } catch (error) {
