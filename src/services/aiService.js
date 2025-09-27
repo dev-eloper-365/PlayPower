@@ -1,9 +1,10 @@
 import Groq from 'groq-sdk';
+import NodeCache from 'node-cache';
 import config from '../config/index.js';
 import { createLogger } from '../utils/logger.js';
-import { cacheGet, cacheSet } from './cacheService.js';
 
 const log = createLogger('ai');
+const cache = new NodeCache({ stdTTL: 60 * 10 }); // 10 minutes
 
 const groq = config.groqApiKey ? new Groq({ apiKey: config.groqApiKey }) : null;
 
@@ -708,7 +709,7 @@ const questionPrompts = {
 
 export async function generateQuestions({ userProfile, subject, grade, count = 5, difficulty, stream }) {
   const cacheKey = `gen:${subject}:${grade}:${stream || 'none'}:${userProfile?.bucket || 'new'}:${count}:${difficulty||'MIX'}`;
-  const cached = await cacheGet(cacheKey);
+  const cached = cache.get(cacheKey);
   if (cached) return cached;
 
   // Validate subject for grade and stream
@@ -769,7 +770,7 @@ export async function generateQuestions({ userProfile, subject, grade, count = 5
   }
 
   const result = { questions, difficultyProfile: distribution };
-  await cacheSet(cacheKey, result, 600); // 10 minutes TTL
+  cache.set(cacheKey, result);
   return result;
 }
 

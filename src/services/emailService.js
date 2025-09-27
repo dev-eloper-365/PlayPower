@@ -4,14 +4,17 @@ import config from '../config/index.js';
 let transporter = null;
 
 function getTransporter() {
-  if (transporter) return transporter;
+  if (transporter !== null) return transporter;
+  
+  // Check if SMTP is configured
   if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
+    console.log('SMTP not configured - email sending will be skipped');
     transporter = false; // Explicitly set to false to prevent retries
     return null;
   }
   
   try {
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       host: config.smtp.host,
       port: config.smtp.port,
       secure: config.smtp.secure,
@@ -21,6 +24,7 @@ function getTransporter() {
       socketTimeout: 10000,    // 10 seconds
       pool: false,             // Disable connection pooling
     });
+    console.log('Email transporter created successfully');
     return transporter;
   } catch (error) {
     console.error('Failed to create email transporter:', error.message);
