@@ -159,7 +159,7 @@ $('#emailForm').addEventListener('submit', async (e) => {
       if (res.skipped) {
         alert('Email skipped (SMTP not configured)');
       } else {
-        alert('Result email sent successfully!');
+        alert('Result email sent successfully! Check Your Spam Mailbox too');
       }
     } else {
       alert('Failed to send email: ' + (res.error?.message || 'Unknown error'));
