@@ -25,12 +25,36 @@ export async function submitAnswers({ userId, quizId, answers }) {
   // update rolling performance
   upsertPerformance({ userId, subject: quiz.subject, grade: quiz.grade, score });
   // fire-and-forget email (if configured)
-  try {
-    const subject = `Quiz result receipt: ${quiz.subject} (Grade ${quiz.grade})`;
-    const text = `Thank you for completing your quiz.\nScore: ${score}%\nSubmission ID: ${submission.id}`;
-    const html = `<p>Thank you for completing your quiz.</p><p><strong>Score:</strong> ${score}%</p><p><strong>Submission ID:</strong> ${submission.id}</p>`;
-    await sendEmail({ to: `${userId}@example.local`, subject, text, html });
-  } catch {}
+  setImmediate(async () => {
+    try {
+      const subject = `AI Quizzer - Your ${quiz.subject} Quiz Results (Grade ${quiz.grade})`;
+      const text = `Thank you for completing your quiz!\n\nScore: ${score}%\nSubmission ID: ${submission.id}\n\nKeep learning with AI Quizzer!`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333;">🎉 Quiz Results</h2>
+          <p>Thank you for completing your <strong>${quiz.subject}</strong> quiz!</p>
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>Score:</strong> ${score}%</p>
+            <p><strong>Submission ID:</strong> ${submission.id}</p>
+          </div>
+          <p>Keep learning with AI Quizzer! 🚀</p>
+        </div>
+      `;
+      await sendEmail({ 
+        to: `${userId}@example.local`, 
+        subject, 
+        text, 
+        html,
+        headers: {
+          'X-Priority': '3',
+          'X-Mailer': 'AI Quizzer',
+          'X-Spam-Check': 'no'
+        }
+      });
+    } catch (error) {
+      console.log('Email send skipped or failed:', error.message);
+    }
+  });
   return { submission, score, suggestions: evaluation.suggestions };
 }
 

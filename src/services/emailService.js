@@ -34,6 +34,12 @@ function getTransporter() {
 }
 
 export async function sendEmail({ to, subject, text, html, headers = {} }) {
+  // Check if SMTP is configured before attempting anything
+  if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
+    console.log('SMTP not configured - email sending skipped');
+    return { ok: false, skipped: true };
+  }
+  
   const t = getTransporter();
   if (!t) return { ok: false, skipped: true };
   
