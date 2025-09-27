@@ -135,32 +135,37 @@ $('#submitForm').addEventListener('submit', async (e) => {
   const responses = Array.from(document.querySelectorAll('#answers select')).map((i) => ({ questionId: i.dataset.qid, userResponse: i.value }));
   const res = await api.post('/api/quiz/submit', { quizId, responses });
   $('#submitResult').textContent = JSON.stringify(res, null, 2);
-  // Add send-result input and button after successful submission
-  if (res.ok && res.submissionId) {
-    let btn = document.getElementById('sendResultBtn');
-    let input = document.getElementById('sendResultTo');
-    if (!input) {
-      input = document.createElement('input');
-      input.type = 'email';
-      input.id = 'sendResultTo';
-      input.placeholder = 'recipient@example.com';
-      input.style.marginLeft = '8px';
-      $('#submitForm').appendChild(input);
+});
+
+// Email form handler
+$('#emailForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('#emailAddress').value.trim();
+  const quizId = $('#quizId').value.trim();
+  
+  if (!quizId) {
+    alert('Please enter a Quiz ID first');
+    return;
+  }
+  
+  if (!email) {
+    alert('Please enter an email address');
+    return;
+  }
+  
+  try {
+    const res = await api.post(`/api/quiz/${encodeURIComponent(quizId)}/send-result`, { to: email });
+    if (res.ok) {
+      if (res.skipped) {
+        alert('Email skipped (SMTP not configured)');
+      } else {
+        alert('Result email sent successfully!');
+      }
+    } else {
+      alert('Failed to send email: ' + (res.error?.message || 'Unknown error'));
     }
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.id = 'sendResultBtn';
-      btn.textContent = 'Send Result Email';
-      btn.style.marginLeft = '8px';
-      $('#submitForm').appendChild(btn);
-      alert('Check Spam');
-      btn.addEventListener('click', async (ev) => {
-        ev.preventDefault();
-        const to = (document.getElementById('sendResultTo')?.value || '').trim();
-        const out = await api.post(`/api/quiz/${encodeURIComponent(quizId)}/send-result`, { to });
-        alert(out.ok ? (out.skipped ? 'Email skipped (not configured)' : 'Email sent') : (out.error?.message || 'Failed to send'));
-      });
-    }
+  } catch (error) {
+    alert('Error sending email: ' + error.message);
   }
 });
 

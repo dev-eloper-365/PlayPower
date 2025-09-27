@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Quizzer Backend - Testing Interface</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AI Quizzer Backend</title>
   <link rel="stylesheet" href="/styles.css">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';">
 </head>
@@ -63,8 +63,17 @@
       <form id="submitForm">
         <label>Quiz ID <input id="quizId" required></label>
         <div id="answers"></div>
-        <button type="submit">Submit</button>
+        <div class="submit-actions">
+          <button type="submit" class="submit-btn">Submit Quiz</button>
+        </div>
       </form>
+      <div class="email-section">
+        <h3>Send Result Email</h3>
+        <form id="emailForm">
+          <label>Email Address <input id="emailAddress" type="email" placeholder="student@example.com" required></label>
+          <button type="submit" class="email-btn">Send Result Email ⭐ Bonus</button>
+        </form>
+      </div>
       <pre id="submitResult" class="panel"></pre>
     </section>
 
@@ -143,7 +152,7 @@
     </section>
 
     <section id="leaderboard">
-      <h2>Leaderboard</h2>
+      <h2>Leaderboard (⭐ Bonus)</h2>
       <form id="leaderboardForm">
         <label>Grade
           <select id="lbGrade">
