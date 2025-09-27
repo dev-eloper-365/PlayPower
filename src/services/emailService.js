@@ -1,70 +1,38 @@
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 import config from '../config/index.js';
 
-let transporter = null;
-
-function getTransporter() {
-  if (transporter !== null) return transporter;
-  
-  // Check if SMTP is configured
-  if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
-    console.log('SMTP not configured - email sending will be skipped');
-    transporter = false; // Explicitly set to false to prevent retries
-    return null;
-  }
-  
-  try {
-    transporter = nodemailer.createTransport({
-      host: config.smtp.host,
-      port: config.smtp.port,
-      secure: config.smtp.secure,
-      auth: { user: config.smtp.user, pass: config.smtp.pass },
-      connectionTimeout: 5000, // 5 seconds
-      greetingTimeout: 5000,   // 5 seconds
-      socketTimeout: 10000,    // 10 seconds
-      pool: false,             // Disable connection pooling
-    });
-    console.log('Email transporter created successfully');
-    return transporter;
-  } catch (error) {
-    console.error('Failed to create email transporter:', error.message);
-    transporter = false; // Explicitly set to false to prevent retries
-    return null;
-  }
+// Initialize SendGrid
+if (config.sendgrid.apiKey) {
+  sgMail.setApiKey(config.sendgrid.apiKey);
 }
 
 export async function sendEmail({ to, subject, text, html, headers = {} }) {
-  // Check if SMTP is configured before attempting anything
-  if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
-    console.log('SMTP not configured - email sending skipped');
+  // Check if SendGrid is configured
+  if (!config.sendgrid.apiKey) {
+    console.log('SendGrid not configured - email sending skipped');
     return { ok: false, skipped: true };
   }
   
-  const t = getTransporter();
-  if (!t) return { ok: false, skipped: true };
-  
   try {
-    const info = await Promise.race([
-      t.sendMail({ 
-        from: config.smtp.from, 
-        to, 
-        subject, 
-        text, 
-        html,
-        headers: {
-          'X-Priority': '3',
-          'X-Mailer': 'AI Quizzer',
-          'X-Spam-Check': 'no',
-          ...headers
-        }
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Email send timeout')), 8000)
-      )
-    ]);
-    return { ok: true, messageId: info.messageId };
+    const msg = {
+      to,
+      from: config.sendgrid.from || 'noreply@aiquizzer.com',
+      subject,
+      text,
+      html,
+      headers: {
+        'X-Priority': '3',
+        'X-Mailer': 'AI Quizzer',
+        'X-Spam-Check': 'no',
+        ...headers
+      }
+    };
+    
+    const response = await sgMail.send(msg);
+    console.log('Email sent successfully via SendGrid');
+    return { ok: true, messageId: response[0].headers['x-message-id'] };
   } catch (error) {
-    console.error('Email send failed:', error.message);
+    console.error('SendGrid email send failed:', error.message);
     return { ok: false, error: error.message };
   }
 }
