@@ -1,36 +1,110 @@
 import NodeCache from 'node-cache';
 import config from '../config/index.js';
+import { APP_CONFIG } from '../constants/index.js';
 
-let redisClient = null;
-let nodeCache = new NodeCache({ stdTTL: config.redis.ttlSeconds, checkperiod: config.redis.ttlSeconds * 0.2 });
-
-async function getRedis() {
-  if (!config.redis.url) return null;
-  if (redisClient) return redisClient;
-  const { createClient } = await import('redis');
-  redisClient = createClient({ url: config.redis.url });
-  redisClient.on('error', (err) => console.error('Redis error', err));
-  await redisClient.connect();
-  return redisClient;
-}
-
-export async function cacheGet(key) {
-  const r = await getRedis();
-  if (r) {
-    const val = await r.get(key);
-    return val ? JSON.parse(val) : null;
+class CacheService {
+  constructor() {
+    this.redisClient = null;
+    this.nodeCache = this.initializeNodeCache();
   }
-  return nodeCache.get(key) ?? null;
-}
 
-export async function cacheSet(key, value, ttlSeconds = config.redis.ttlSeconds) {
-  const r = await getRedis();
-  const str = JSON.stringify(value);
-  if (r) {
-    await r.set(key, str, { EX: ttlSeconds });
-    return true;
+  initializeNodeCache() {
+    const ttlSeconds = config.redis.ttlSeconds || APP_CONFIG.DEFAULT_CACHE_TTL;
+    return new NodeCache({ 
+      stdTTL: ttlSeconds, 
+      checkperiod: ttlSeconds * 0.2 
+    });
   }
-  return nodeCache.set(key, value, ttlSeconds);
+
+  async getRedisClient() {
+    if (!config.redis.url) return null;
+    if (this.redisClient) return this.redisClient;
+    
+    try {
+      const { createClient } = await import('redis');
+      this.redisClient = createClient({ url: config.redis.url });
+      this.redisClient.on('error', this.handleRedisError);
+      await this.redisClient.connect();
+      return this.redisClient;
+    } catch (error) {
+      console.error('Failed to connect to Redis:', error.message);
+      return null;
+    }
+  }
+
+  handleRedisError(error) {
+    console.error('Redis error:', error);
+  }
+
+  async get(key) {
+    const redisClient = await this.getRedisClient();
+    
+    if (redisClient) {
+      return this.getFromRedis(redisClient, key);
+    }
+    
+    return this.getFromNodeCache(key);
+  }
+
+  async getFromRedis(redisClient, key) {
+    try {
+      const value = await redisClient.get(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      console.error('Redis get error:', error.message);
+      return null;
+    }
+  }
+
+  getFromNodeCache(key) {
+    return this.nodeCache.get(key) ?? null;
+  }
+
+  async set(key, value, ttlSeconds = config.redis.ttlSeconds) {
+    const redisClient = await this.getRedisClient();
+    
+    if (redisClient) {
+      return this.setInRedis(redisClient, key, value, ttlSeconds);
+    }
+    
+    return this.setInNodeCache(key, value, ttlSeconds);
+  }
+
+  async setInRedis(redisClient, key, value, ttlSeconds) {
+    try {
+      const serializedValue = JSON.stringify(value);
+      await redisClient.set(key, serializedValue, { EX: ttlSeconds });
+      return true;
+    } catch (error) {
+      console.error('Redis set error:', error.message);
+      return false;
+    }
+  }
+
+  setInNodeCache(key, value, ttlSeconds) {
+    return this.nodeCache.set(key, value, ttlSeconds);
+  }
+
+  async clear() {
+    if (this.redisClient) {
+      await this.redisClient.flushAll();
+    }
+    this.nodeCache.flushAll();
+  }
+
+  async disconnect() {
+    if (this.redisClient) {
+      await this.redisClient.quit();
+      this.redisClient = null;
+    }
+  }
 }
 
-export default { cacheGet, cacheSet }; 
+const cacheService = new CacheService();
+
+export const cacheGet = (key) => cacheService.get(key);
+export const cacheSet = (key, value, ttlSeconds) => cacheService.set(key, value, ttlSeconds);
+export const cacheClear = () => cacheService.clear();
+export const cacheDisconnect = () => cacheService.disconnect();
+
+export default { cacheGet, cacheSet, cacheClear, cacheDisconnect }; 
