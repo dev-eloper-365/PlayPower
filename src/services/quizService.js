@@ -25,12 +25,14 @@ export async function submitAnswers({ userId, quizId, answers }) {
   // update rolling performance
   upsertPerformance({ userId, subject: quiz.subject, grade: quiz.grade, score });
   // fire-and-forget email (if configured)
-  try {
-    const subject = `Quiz result receipt: ${quiz.subject} (Grade ${quiz.grade})`;
-    const text = `Thank you for completing your quiz.\nScore: ${score}%\nSubmission ID: ${submission.id}`;
-    const html = `<p>Thank you for completing your quiz.</p><p><strong>Score:</strong> ${score}%</p><p><strong>Submission ID:</strong> ${submission.id}</p>`;
-    await sendEmail({ to: `${userId}@example.local`, subject, text, html });
-  } catch {}
+  setImmediate(async () => {
+    try {
+      const subject = `Quiz result receipt: ${quiz.subject} (Grade ${quiz.grade})`;
+      const text = `Thank you for completing your quiz.\nScore: ${score}%\nSubmission ID: ${submission.id}`;
+      const html = `<p>Thank you for completing your quiz.</p><p><strong>Score:</strong> ${score}%</p><p><strong>Submission ID:</strong> ${submission.id}</p>`;
+      await sendEmail({ to: `${userId}@example.local`, subject, text, html });
+    } catch {}
+  });
   return { submission, score, suggestions: evaluation.suggestions };
 }
 
